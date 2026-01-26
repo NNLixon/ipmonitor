@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Monitor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.95); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        }
+        
+        body {
+            background: linear-gradient(-45deg, #0a0f1e, #0f172a, #1a1f35, #0f172a);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+        
+        .pulse-dot { 
+            animation: pulse-dot 2s ease-in-out infinite; 
+        }
+        
+        .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .status-filter.active { 
+            background-color: rgba(59, 130, 246, 0.3);
+            font-weight: 600;
+            transform: scale(1.05);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        
+        .status-filter {
+            transition: all 0.3s ease;
+        }
+        
+        .status-filter:hover {
+            transform: translateY(-2px);
+        }
+        
+        .group-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 40;
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        table tbody tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.01);
+        }
+        
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(59, 130, 246, 0.15);
+            border-radius: 50%;
+        }
+        
+        @keyframes particle-float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .header-glow {
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+        }
+        
+        input:focus, select:focus {
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+        }
+        
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="color"],
+        select {
+            background-color: rgba(15, 23, 42, 0.6);
+            border-color: rgba(100, 116, 139, 0.5);
+            color: #e2e8f0;
+        }
+        
+        input[type="text"]::placeholder,
+        input[type="number"]::placeholder {
+            color: #64748b;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            background-color: rgba(15, 23, 42, 0.8);
+            border-color: rgba(59, 130, 246, 0.8);
+            color: #e2e8f0;
+        }
+        
+        label {
+            color: #cbd5e1;
+        }
+
+        /* Multi-select specific styles */
+        .host-checkbox:checked {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+
+        .host-checkbox:checked:after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .host-checkbox {
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 4px;
+            cursor: pointer;
+            height: 20px;
+            width: 20px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .host-checkbox:hover {
+            border-color: #60a5fa;
+            transform: scale(1.05);
+        }
+
+        #select-all {
+            position: relative;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 4px;
+            cursor: pointer;
+            height: 20px;
+            width: 20px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        #select-all:checked {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+
+        #select-all:checked:after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+            left: 3px;
+            top: -1px;
+        }
+
+        #bulk-actions {
+            animation: slideIn 0.3s ease-out;
+            border: 2px solid #3B82F6;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Animated Particles Background -->
+    <div class="particles" id="particles"></div>
+    
+    <div id="app" style="position: relative; z-index: 1;">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 text-white shadow-lg header-glow">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center space-x-3 float">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <div>
+                            <h1 class="text-2xl font-bold">IP Monitor Dashboard</h1>
+                            <p class="text-blue-100 text-sm">Real-time network monitoring with groups</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openSettings()" class="glass hover:bg-white/10 px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </button>
+                        <button id="toggleBtn" onclick="toggleMonitoring()" class="px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105">
+                            <svg id="toggleIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+                            <span id="toggleText">Loading...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                <div class="glass-card rounded-xl shadow-lg p-6 stat-card slide-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Total Hosts</p>
+                            <p id="stat-total" class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">0</p>
+                        </div>
+                        <i class="fas fa-server text-blue-500 opacity-30 text-4xl"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl shadow-lg p-6 cursor-pointer stat-card slide-in" style="animation-delay: 0.1s" onclick="filterByStatus('UP')">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Online</p>
+                            <p id="stat-up" class="text-3xl font-bold text-green-400">0</p>
+                        </div>
+                        <i class="fas fa-check-circle text-green-500 opacity-30 text-4xl"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl shadow-lg p-6 cursor-pointer stat-card slide-in" style="animation-delay: 0.2s" onclick="filterByStatus('DOWN')">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Offline</p>
+                            <p id="stat-down" class="text-3xl font-bold text-red-400">0</p>
+                        </div>
+                        <i class="fas fa-times-circle text-red-500 opacity-30 text-4xl"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl shadow-lg p-6 stat-card slide-in" style="animation-delay: 0.3s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Groups</p>
+                            <p id="stat-groups" class="text-3xl font-bold text-purple-400">0</p>
+                        </div>
+                        <i class="fas fa-layer-group text-purple-500 opacity-30 text-4xl"></i>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-xl shadow-lg p-6 stat-card slide-in" style="animation-delay: 0.4s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium">Status</p>
+                            <p id="stat-status" class="text-xl font-bold text-gray-400">Stopped</p>
+                        </div>
+                        <svg id="stat-icon" class="w-12 h-12 opacity-30 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Actions Panel -->
+            <div id="bulk-actions" class="hidden mb-4 glass-card rounded-xl shadow-lg p-4 slide-in">
+                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-300 font-medium">
+                            <span id="selected-count" class="text-blue-400 font-bold">0</span> hosts selected
+                        </span>
+                        <button onclick="clearSelection()" class="px-3 py-1 rounded-full text-sm bg-slate-700 border border-slate-600 text-gray-200 hover:bg-slate-600 transition">
+                            Clear
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="bulkEnable(true)" class="px-3 py-2 rounded-lg text-sm bg-green-900/40 border border-green-700/50 text-green-300 hover:bg-green-800/40 transition flex items-center space-x-2">
+                            <i class="fas fa-toggle-on"></i>
+                            <span>Enable Selected</span>
+                        </button>
+                        <button onclick="bulkEnable(false)" class="px-3 py-2 rounded-lg text-sm bg-yellow-900/40 border border-yellow-700/50 text-yellow-300 hover:bg-yellow-800/40 transition flex items-center space-x-2">
+                            <i class="fas fa-toggle-off"></i>
+                            <span>Disable Selected</span>
+                        </button>
+                        <button onclick="bulkDelete()" class="px-3 py-2 rounded-lg text-sm bg-red-900/40 border border-red-700/50 text-red-300 hover:bg-red-800/40 transition flex items-center space-x-2">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete Selected</span>
+                        </button>
+                        <div class="relative">
+                            <select id="bulk-group-select" class="px-3 py-2 rounded-lg text-sm bg-blue-900/40 border border-blue-700/50 text-blue-200 transition">
+                                <option value="">Move to Group...</option>
+                            </select>
+                        </div>
+                        <button onclick="bulkMoveToGroup()" class="px-3 py-2 rounded-lg text-sm bg-purple-900/40 border border-purple-700/50 text-purple-300 hover:bg-purple-800/40 transition flex items-center space-x-2">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Move</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Actions -->
+            <div class="mb-6 glass-card rounded-xl shadow-lg p-4 slide-in" style="animation-delay: 0.5s">
+                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-gray-300 font-medium">Filters:</span>
+                        
+                        <button id="filter-all" onclick="clearFilters()" class="px-3 py-1 rounded-full text-sm bg-slate-700 border border-slate-600 text-gray-200 hover:bg-slate-600 status-filter active">
+                            All
+                        </button>
+                        <button id="filter-up" onclick="filterByStatus('UP')" class="px-3 py-1 rounded-full text-sm bg-green-900/40 border border-green-700/50 text-green-300 hover:bg-green-800/40 status-filter">
+                            Online
+                        </button>
+                        <button id="filter-down" onclick="filterByStatus('DOWN')" class="px-3 py-1 rounded-full text-sm bg-red-900/40 border border-red-700/50 text-red-300 hover:bg-red-800/40 status-filter">
+                            Offline
+                        </button>
+                        <button id="filter-unknown" onclick="filterByStatus('UNKNOWN')" class="px-3 py-1 rounded-full text-sm bg-slate-700/40 border border-slate-600/50 text-gray-300 hover:bg-slate-600/40 status-filter">
+                            Unknown
+                        </button>
+                        
+                        <select id="group-filter" onchange="filterByGroup()" class="px-3 py-1 rounded-full text-sm bg-blue-900/40 border border-blue-700/50 text-blue-200 transition">
+                            <option value="">All Groups</option>
+                        </select>
+                        
+                        <div class="relative">
+                            <input type="text" id="search-input" placeholder="Search hosts..." 
+                                   class="pl-9 pr-3 py-1 rounded-full text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        
+                        <button onclick="clearFilters()" class="px-3 py-1 rounded-full text-sm bg-slate-700 border border-slate-600 text-gray-200 hover:bg-slate-600 transition transform hover:scale-105">
+                            Clear
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <button onclick="openAddModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Host</span>
+                        </button>
+                        <button onclick="openSubnetModal()" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-network-wired"></i>
+                            <span>Scan Subnet</span>
+                        </button>
+                        <button onclick="openGroupModal()" class="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-lg">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Manage Groups</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hosts Table -->
+            <div class="glass-card rounded-xl shadow-lg slide-in" style="animation-delay: 0.6s">
+                <div class="p-6 border-b border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-xl font-semibold text-gray-200">Monitored Hosts</h2>
+                        <div class="text-sm text-gray-400">
+                            Showing <span id="hosts-count" class="font-bold text-blue-400">0</span> hosts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-800/50 border-b border-slate-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left">
+                                    <input type="checkbox" id="select-all" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer" onchange="toggleSelectAll(this.checked)">
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Host Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">IP Address</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Group</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Last Check</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Downtime</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hosts-table" class="divide-y divide-slate-700">
+                            <tr>
+                                <td colspan="8" class="px-6 py-8 text-center text-gray-400">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Host Modal -->
+    <div id="hostModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="rounded-2xl shadow-2xl max-w-md w-full p-6 relative z-50 modal-content border border-slate-700">
+            <h3 id="modalTitle" class="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Add New Host</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Host Name *</label>
+                    <input id="hostName" type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., Web Server">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">IP Address *</label>
+                    <input id="hostIP" type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., 192.168.1.100">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Group</label>
+                    <select id="hostGroup" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        <option value="">No Group</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Tags (comma separated)</label>
+                    <input id="hostTags" type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" placeholder="e.g., production,web,database">
+                </div>
+                <div class="flex items-center">
+                    <input id="hostEnabled" type="checkbox" class="h-4 w-4 text-blue-600 rounded" checked>
+                    <label for="hostEnabled" class="ml-2 text-sm">Enable monitoring</label>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="saveHost()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg transition transform hover:scale-105 shadow-lg">Save</button>
+                    <button onclick="closeModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 px-4 py-2 rounded-lg transition transform hover:scale-105">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Management Modal -->
+    <div id="groupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-backdrop" onclick="closeGroupModal()"></div>
+        <div class="rounded-2xl shadow-2xl max-w-4xl w-full p-6 relative z-50 max-h-[90vh] overflow-y-auto modal-content border border-slate-700">
+            <h3 class="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Manage Groups</h3>
+            
+            <div class="mb-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                <h4 class="text-lg font-medium mb-3 text-gray-200">Add New Group</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Group Name *</label>
+                        <input id="groupName" type="text" class="w-full px-3 py-2 border rounded-lg transition" placeholder="e.g., Public IPs">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Color</label>
+                        <div class="flex items-center space-x-2">
+                            <input id="groupColor" type="color" class="h-10 w-10 cursor-pointer rounded-lg border border-slate-600" value="#3B82F6">
+                            <input id="groupColorText" type="text" class="flex-1 px-3 py-2 border rounded-lg transition" value="#3B82F6">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Icon</label>
+                        <select id="groupIcon" class="w-full px-3 py-2 border rounded-lg transition">
+                            <option value="🔵">🔵 Blue Circle</option>
+                            <option value="🟢">🟢 Green Circle</option>
+                            <option value="🟡">🟡 Yellow Circle</option>
+                            <option value="🔴">🔴 Red Circle</option>
+                            <option value="🟣">🟣 Purple Circle</option>
+                            <option value="🟠">🟠 Orange Circle</option>
+                            <option value="🏢">🏢 Building</option>
+                            <option value="🌐">🌐 Globe</option>
+                            <option value="📡">📡 Satellite</option>
+                            <option value="🖥️">🖥️ Desktop</option>
+                            <option value="🛰️">🛰️ Satellite</option>
+                            <option value="🔗">🔗 Link</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Description</label>
+                        <input id="groupDescription" type="text" class="w-full px-3 py-2 border rounded-lg transition" placeholder="e.g., Public facing servers">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button onclick="addGroup()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Group</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-lg font-medium mb-3 text-gray-200">Existing Groups</h4>
+                <div id="groups-list" class="space-y-3">
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <button onclick="closeGroupModal()" class="bg-slate-700 hover:bg-slate-600 text-gray-200 px-4 py-2 rounded-lg transition transform hover:scale-105">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subnet Scanning Modal -->
+    <div id="subnetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-backdrop" onclick="closeSubnetModal()"></div>
+        <div class="rounded-2xl shadow-2xl max-w-md w-full p-6 relative z-50 modal-content border border-slate-700">
+            <h3 class="text-2xl font-bold mb-4 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Scan Subnet</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Subnet (CIDR Notation) *</label>
+                    <input id="subnetInput" type="text" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-mono transition" placeholder="e.g., 192.168.1.0/24">
+                    <p class="text-xs text-gray-400 mt-1">Enter subnet like 192.168.1.0/24, 10.0.0.0/8, etc.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Preview IPs</label>
+                    <div id="subnetPreview" class="text-sm text-gray-400 p-2 bg-slate-800/50 rounded-lg border border-slate-700 min-h-[60px]">
+                        Enter a subnet to preview IPs...
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Group Name (Optional)</label>
+                    <input id="subnetGroupName" type="text" class="w-full px-3 py-2 border rounded-lg transition" placeholder="e.g., Office Network">
+                    <p class="text-xs text-gray-400 mt-1">Leave empty to use subnet as group name</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Group Color</label>
+                        <div class="flex items-center space-x-2">
+                            <input id="subnetGroupColor" type="color" class="h-10 w-10 cursor-pointer rounded-lg border border-slate-600" value="#10B981">
+                            <input id="subnetGroupColorText" type="text" class="flex-1 px-3 py-2 border rounded-lg transition" value="#10B981">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Group Icon</label>
+                        <select id="subnetGroupIcon" class="w-full px-3 py-2 border rounded-lg transition">
+                            <option value="🌐">🌐 Globe</option>
+                            <option value="🔗">🔗 Link</option>
+                            <option value="🏢">🏢 Building</option>
+                            <option value="🖥️">🖥️ Desktop</option>
+                            <option value="📡">📡 Satellite</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <input id="scanMacAddress" type="checkbox" class="h-4 w-4 text-green-600 rounded" checked>
+                    <label for="scanMacAddress" class="ml-2 text-sm">Scan MAC addresses (requires sudo)</label>
+                </div>
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="startSubnetScan()" class="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg transition transform hover:scale-105 shadow-lg">Start Scan</button>
+                    <button onclick="closeSubnetModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 px-4 py-2 rounded-lg transition transform hover:scale-105">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-backdrop" onclick="closeSettings()"></div>
+        <div class="rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative z-50 max-h-[90vh] overflow-y-auto modal-content border border-slate-700">
+            <h3 class="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Configuration Settings</h3>
+            <div class="space-y-6">
+                <!-- Webhook Configuration -->
+                <div class="glass-card p-4 rounded-lg border border-slate-700">
+                    <h4 class="text-lg font-medium mb-3 text-gray-200 flex items-center">
+                        <i class="fas fa-bell mr-2"></i>
+                        Discord Webhook
+                    </h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Webhook URL</label>
+                            <input id="configWebhook" type="text" 
+                                   class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm transition"
+                                   placeholder="https://discord.com/api/webhooks/...">
+                        </div>
+                        
+                        <div id="webhookStatus" class="text-sm hidden">
+                            <div class="flex items-center space-x-2 p-2 rounded-lg" id="webhookStatusContent">
+                                <!-- Status will be filled by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- OTP Validation Section -->
+                        <div id="otpValidationSection" class="hidden space-y-3 p-3 bg-blue-900/20 rounded-lg border border-blue-700/30">
+                            <div class="flex items-center justify-between">
+                                <h5 class="text-sm font-medium text-blue-300">
+                                    <i class="fas fa-shield-alt mr-1"></i>
+                                    OTP Verification
+                                </h5>
+                                <span id="otpTimer" class="text-xs px-2 py-1 bg-blue-900/40 text-blue-300 rounded-full"></span>
+                            </div>
+                            
+                            <div id="otpInstructions" class="text-sm text-gray-300">
+                                An OTP has been sent to your Discord webhook. Enter it below to verify.
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <input id="otpInput" type="text" 
+                                       class="flex-1 px-3 py-2 border rounded-lg bg-gray-900 text-gray-100 text-center text-lg font-mono tracking-widest"
+                                       placeholder="000000"
+                                       maxlength="6"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <button onclick="verifyOTP()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+                                    Verify
+                                </button>
+                            </div>
+                            
+                            <div id="otpError" class="text-sm text-red-400 hidden"></div>
+                            
+                            <div class="text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                OTP expires in 10 minutes. Check your Discord channel for the code.
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="saveWebhook()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg transition transform hover:scale-105 shadow-lg">
+                                Save & Validate
+                            </button>
+                            <button onclick="sendOTP()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition transform hover:scale-105">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monitoring Configuration -->
+                <div class="glass-card p-4 rounded-lg border border-slate-700">
+                    <h4 class="text-lg font-medium mb-3 text-gray-200 flex items-center">
+                        <i class="fas fa-cogs mr-2"></i>
+                        Monitoring Settings
+                    </h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Ping Interval (seconds)</label>
+                            <input id="configPingInterval" type="number" class="w-full px-3 py-2 border rounded-lg transition" min="1" max="3600">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Max Retries</label>
+                            <input id="configMaxRetries" type="number" class="w-full px-3 py-2 border rounded-lg transition" min="1" max="10">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Batch Interval (seconds)</label>
+                            <input id="configBatchInterval" type="number" class="w-full px-3 py-2 border rounded-lg transition" min="1" max="60">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Concurrent Pings</label>
+                            <input id="configConcurrent" type="number" class="w-full px-3 py-2 border rounded-lg transition" min="1" max="1000">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3 pt-4">
+                    <button onclick="saveSettings()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg transition transform hover:scale-105 shadow-lg">Save Configuration</button>
+                    <button onclick="closeSettings()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-gray-200 px-4 py-2 rounded-lg transition transform hover:scale-105">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Webhook OTP Functions
+        let otpTimerInterval = null;
+        let otpExpiryTime = null;
+
+        async function sendOTP() {
+            const webhookUrl = document.getElementById('configWebhook').value.trim();
+            
+            if (!webhookUrl) {
+                alert('Please enter a webhook URL first');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/webhook/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Show OTP section
+                    document.getElementById('otpValidationSection').classList.remove('hidden');
+                    document.getElementById('otpInput').value = '';
+                    document.getElementById('otpInput').focus();
+                    document.getElementById('otpError').classList.add('hidden');
+                    
+                    // Start OTP timer
+                    otpExpiryTime = Date.now() + (result.expires_in * 1000);
+                    startOTPTimer();
+                    
+                    showToast('OTP sent to Discord! Check your channel.', 'success');
+                } else {
+                    showToast('Failed to send OTP: ' + result.message, 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        function startOTPTimer() {
+            if (otpTimerInterval) {
+                clearInterval(otpTimerInterval);
+            }
+            
+            otpTimerInterval = setInterval(updateOTPTimer, 1000);
+            updateOTPTimer();
+        }
+
+        function updateOTPTimer() {
+            if (!otpExpiryTime) return;
+            
+            const now = Date.now();
+            const remaining = Math.max(0, otpExpiryTime - now);
+            
+            if (remaining <= 0) {
+                clearInterval(otpTimerInterval);
+                document.getElementById('otpTimer').textContent = 'Expired';
+                document.getElementById('otpTimer').className = 'text-xs px-2 py-1 bg-red-900/40 text-red-300 rounded-full';
+                return;
+            }
+            
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            
+            document.getElementById('otpTimer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (remaining < 60000) { // Less than 1 minute
+                document.getElementById('otpTimer').className = 'text-xs px-2 py-1 bg-red-900/40 text-red-300 rounded-full';
+            } else if (remaining < 300000) { // Less than 5 minutes
+                document.getElementById('otpTimer').className = 'text-xs px-2 py-1 bg-yellow-900/40 text-yellow-300 rounded-full';
+            } else {
+                document.getElementById('otpTimer').className = 'text-xs px-2 py-1 bg-blue-900/40 text-blue-300 rounded-full';
+            }
+        }
+
+        async function verifyOTP() {
+            const otp = document.getElementById('otpInput').value.trim();
+            
+            if (!otp || otp.length !== 6) {
+                document.getElementById('otpError').textContent = 'Please enter a valid 6-digit OTP';
+                document.getElementById('otpError').classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/webhook/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp: otp })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Clear OTP section
+                    clearInterval(otpTimerInterval);
+                    document.getElementById('otpValidationSection').classList.add('hidden');
+                    document.getElementById('otpError').classList.add('hidden');
+                    
+                    // Update webhook status
+                    updateWebhookStatus(true, 'Webhook validated successfully!');
+                    
+                    showToast('Webhook validated successfully!', 'success');
+                    
+                    // Refresh page to show updated status
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    document.getElementById('otpError').textContent = result.message;
+                    document.getElementById('otpError').classList.remove('hidden');
+                }
+            } catch (err) {
+                document.getElementById('otpError').textContent = 'Error: ' + err.message;
+                document.getElementById('otpError').classList.remove('hidden');
+            }
+        }
+
+        async function saveWebhook() {
+            const webhookUrl = document.getElementById('configWebhook').value.trim();
+            
+            if (!webhookUrl) {
+                // If empty, just save it (removing webhook)
+                await saveSettings();
+                return;
+            }
+            
+            // Save the webhook URL first
+            const config = {
+                discord_webhook_url: webhookUrl
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (response.ok) {
+                    // After saving, start OTP validation
+                    await sendOTP();
+                } else {
+                    const error = await response.json();
+                    showToast('Failed to save webhook: ' + (error.detail || 'Unknown error'), 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        function updateWebhookStatus(isValid, message) {
+            const statusDiv = document.getElementById('webhookStatus');
+            const statusContent = document.getElementById('webhookStatusContent');
+            
+            if (!isValid) {
+                statusDiv.classList.add('hidden');
+                return;
+            }
+            
+            statusDiv.classList.remove('hidden');
+            
+            if (message.includes('validated')) {
+                statusContent.innerHTML = `
+                    <i class="fas fa-check-circle text-green-400"></i>
+                    <span class="text-green-300">${message}</span>
+                `;
+                statusContent.className = 'flex items-center space-x-2 p-2 rounded-lg bg-green-900/30 border border-green-700/30';
+            } else if (message.includes('Error') || message.includes('Failed')) {
+                statusContent.innerHTML = `
+                    <i class="fas fa-exclamation-circle text-red-400"></i>
+                    <span class="text-red-300">${message}</span>
+                `;
+                statusContent.className = 'flex items-center space-x-2 p-2 rounded-lg bg-red-900/30 border border-red-700/30';
+            } else {
+                statusContent.innerHTML = `
+                    <i class="fas fa-info-circle text-blue-400"></i>
+                    <span class="text-blue-300">${message}</span>
+                `;
+                statusContent.className = 'flex items-center space-x-2 p-2 rounded-lg bg-blue-900/30 border border-blue-700/30';
+            }
+        }
+
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        createParticles();
+        
+        const API_BASE = '/api';
+        let currentEditIP = null;
+        let currentEditGroupId = null;
+        let groups = [];
+        let currentFilters = {
+            status: null,
+            group: null,
+            search: ''
+        };
+        
+        // Selection management
+        let selectedHosts = new Set();
+        let allHostsData = [];
+
+        async function loadData() {
+            await Promise.all([loadStatus(), loadGroups(), loadHosts()]);
+        }
+
+        async function loadStatus() {
+            try {
+                const res = await fetch(`${API_BASE}/status`);
+                const data = await res.json();
+                
+                document.getElementById('stat-total').textContent = data.stats.total;
+                document.getElementById('stat-up').textContent = data.stats.up;
+                document.getElementById('stat-down').textContent = data.stats.down;
+                
+                const statusEl = document.getElementById('stat-status');
+                const iconEl = document.getElementById('stat-icon');
+                const toggleBtn = document.getElementById('toggleBtn');
+                const toggleText = document.getElementById('toggleText');
+                const toggleIcon = document.getElementById('toggleIcon');
+                
+                if (data.is_running) {
+                    statusEl.textContent = 'Monitoring';
+                    statusEl.className = 'text-xl font-bold text-green-400';
+                    iconEl.className = 'w-12 h-12 opacity-30 text-green-400 pulse-dot';
+                    toggleBtn.className = 'bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-lg';
+                    toggleText.textContent = 'Stop';
+                    toggleIcon.innerHTML = '<rect x="6" y="6" width="12" height="12" />';
+                } else {
+                    statusEl.textContent = 'Stopped';
+                    statusEl.className = 'text-xl font-bold text-gray-400';
+                    iconEl.className = 'w-12 h-12 opacity-30 text-gray-400';
+                    toggleBtn.className = 'bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-lg';
+                    toggleText.textContent = 'Start';
+                    toggleIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3" />';
+                }
+                
+                // Add webhook status indicator
+                try {
+                    const configRes = await fetch(`${API_BASE}/config`);
+                    const config = await configRes.json();
+                    
+                    // Find or create webhook status element
+                    let webhookStatus = document.getElementById('webhook-status');
+                    if (!webhookStatus) {
+                        webhookStatus = document.createElement('div');
+                        webhookStatus.id = 'webhook-status';
+                        webhookStatus.className = 'absolute top-2 right-2 text-xs';
+                        document.getElementById('stat-status').parentElement.appendChild(webhookStatus);
+                    }
+                    
+                    webhookStatus.innerHTML = config.webhook_url ? 
+                        '🔗 Webhook: Configured' : '🔗 Webhook: Not Configured';
+                    
+                } catch (configErr) {
+                    console.error('Error loading config for webhook status:', configErr);
+                }
+                
+            } catch (err) {
+                console.error('Error loading status:', err);
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const res = await fetch(`${API_BASE}/groups`);
+                groups = await res.json();
+                document.getElementById('stat-groups').textContent = groups.length;
+                
+                const groupFilter = document.getElementById('group-filter');
+                const hostGroupSelect = document.getElementById('hostGroup');
+                const bulkGroupSelect = document.getElementById('bulk-group-select');
+                
+                groupFilter.innerHTML = '<option value="">All Groups</option>';
+                hostGroupSelect.innerHTML = '<option value="">No Group</option>';
+                bulkGroupSelect.innerHTML = '<option value="">Move to Group...</option>';
+                
+                groups.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = `${group.icon} ${group.name} (${group.host_count})`;
+                    
+                    groupFilter.appendChild(option.cloneNode(true));
+                    hostGroupSelect.appendChild(option.cloneNode(true));
+                    bulkGroupSelect.appendChild(option.cloneNode(true));
+                });
+                
+                updateGroupsList();
+                
+            } catch (err) {
+                console.error('Error loading groups:', err);
+            }
+        }
+
+        async function loadHosts() {
+            try {
+                const params = new URLSearchParams();
+                if (currentFilters.status) params.append('status_filter', currentFilters.status);
+                if (currentFilters.group) params.append('group_filter', currentFilters.group);
+                if (currentFilters.search) params.append('search', currentFilters.search);
+                
+                const query = params.toString() ? `?${params.toString()}` : '';
+                const res = await fetch(`${API_BASE}/hosts${query}`);
+                const hosts = await res.json();
+                
+                allHostsData = hosts;
+                const tbody = document.getElementById('hosts-table');
+                document.getElementById('hosts-count').textContent = hosts.length;
+                
+                if (hosts.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-400">No hosts found. Click "Add Host" to begin monitoring.</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = hosts.map(host => {
+                    const normalizedStatus = String(host.status || 'UNKNOWN').toUpperCase();
+                    const isSelected = selectedHosts.has(host.ip);
+                    
+                    const statusColors = {
+                        'UP': 'bg-green-500',
+                        'DOWN': 'bg-red-500',
+                        'CHECKING': 'bg-yellow-500',
+                        'UNKNOWN': 'bg-gray-500'
+                    };
+                    
+                    const statusBadges = {
+                        'UP': 'bg-green-900/40 text-green-300 border border-green-700/50',
+                        'DOWN': 'bg-red-900/40 text-red-300 border border-red-700/50',
+                        'CHECKING': 'bg-yellow-900/40 text-yellow-300 border border-yellow-700/50',
+                        'UNKNOWN': 'bg-slate-700/40 text-gray-300 border border-slate-600/50'
+                    };
+                    
+                    let groupBadge = '';
+                    if (host.group_name && host.group_color) {
+                        groupBadge = `
+                            <span class="group-badge" style="background-color: ${host.group_color}20; color: ${host.group_color}; border: 1px solid ${host.group_color}40;">
+                                ${host.group_name}
+                            </span>
+                        `;
+                    }
+                    
+                    const tagsHtml = host.tags && host.tags.length > 0 ? 
+                        `<div class="mt-1 flex flex-wrap gap-1">
+                            ${host.tags.map(tag => 
+                                `<span class="px-2 py-0.5 text-xs bg-slate-700 text-gray-300 rounded border border-slate-600">${tag}</span>`
+                            ).join('')}
+                        </div>` : '';
+                    
+                    // MAC address display
+                    const macDisplay = host.mac_address ? 
+                        `<div class="mt-1 text-xs text-gray-500 font-mono">${host.mac_address}</div>
+                         ${host.vendor_info ? `<div class="text-xs text-gray-500">${host.vendor_info}</div>` : ''}` 
+                        : '';
+                    
+                    return `
+                        <tr class="transition hover:bg-slate-800/50">
+                            <td class="px-4 py-4 whitespace-nowrap">
+                                <input type="checkbox" class="host-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer" 
+                                       ${isSelected ? 'checked' : ''}
+                                       onchange="toggleHostSelection('${host.ip}', this)"
+                                       data-ip="${host.ip}">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full ${statusColors[normalizedStatus] || 'bg-gray-500'} pulse-dot"></div>
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${statusBadges[normalizedStatus] || 'bg-slate-700 text-gray-300'}">
+                                        ${normalizedStatus}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-200">${host.name}</div>
+                                ${tagsHtml}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-400 font-mono">${host.ip}</div>
+                                ${macDisplay}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                ${groupBadge || '<span class="text-gray-500 text-sm">—</span>'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-400">${host.lastCheck}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-400">${host.downtime > 0 ? host.downtime + ' mins' : '-'}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="editHost('${host.ip}')" class="text-blue-400 hover:text-blue-300 transition transform hover:scale-110" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteHost('${host.ip}')" class="text-red-400 hover:text-red-300 transition transform hover:scale-110" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading hosts:', err);
+            }
+        }
+
+        function filterByStatus(status) {
+            clearSelection();
+            currentFilters.status = status;
+            updateActiveFilters();
+            loadHosts();
+        }
+
+        function filterByGroup() {
+            clearSelection();
+            const groupFilter = document.getElementById('group-filter');
+            currentFilters.group = groupFilter.value || null;
+            updateActiveFilters();
+            loadHosts();
+        }
+
+        function searchHosts() {
+            clearSelection();
+            const searchInput = document.getElementById('search-input');
+            currentFilters.search = searchInput.value.trim();
+            updateActiveFilters();
+            loadHosts();
+        }
+
+        function clearFilters() {
+            clearSelection();
+            currentFilters = { status: null, group: null, search: '' };
+            document.getElementById('search-input').value = '';
+            document.getElementById('group-filter').value = '';
+            updateActiveFilters();
+            loadHosts();
+        }
+
+        function updateActiveFilters() {
+            document.querySelectorAll('.status-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (currentFilters.status) {
+                document.getElementById(`filter-${currentFilters.status.toLowerCase()}`).classList.add('active');
+            } else {
+                document.getElementById('filter-all').classList.add('active');
+            }
+            
+            document.getElementById('group-filter').value = currentFilters.group || '';
+            document.getElementById('search-input').value = currentFilters.search || '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(searchHosts, 300);
+            });
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchHosts();
+                }
+            });
+        });
+
+        // Multi-select functions
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulk-actions');
+            const selectedCount = document.getElementById('selected-count');
+            
+            if (selectedHosts.size > 0) {
+                bulkActions.classList.remove('hidden');
+                selectedCount.textContent = selectedHosts.size;
+            } else {
+                bulkActions.classList.add('hidden');
+            }
+        }
+
+        function toggleSelectAll(checked) {
+            const checkboxes = document.querySelectorAll('.host-checkbox');
+            const currentHostIPs = Array.from(allHostsData).map(host => host.ip);
+            
+            if (checked) {
+                currentHostIPs.forEach(ip => selectedHosts.add(ip));
+                checkboxes.forEach(cb => cb.checked = true);
+            } else {
+                selectedHosts.clear();
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+            
+            updateBulkActions();
+        }
+
+        function toggleHostSelection(ip, checkbox) {
+            if (checkbox.checked) {
+                selectedHosts.add(ip);
+            } else {
+                selectedHosts.delete(ip);
+                document.getElementById('select-all').checked = false;
+            }
+            
+            updateBulkActions();
+        }
+
+        function clearSelection() {
+            selectedHosts.clear();
+            const checkboxes = document.querySelectorAll('.host-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+            document.getElementById('select-all').checked = false;
+            updateBulkActions();
+        }
+
+        // Bulk operations
+        async function bulkEnable(enabled) {
+            if (selectedHosts.size === 0) {
+                alert('Please select hosts first');
+                return;
+            }
+            
+            const confirmMessage = enabled 
+                ? `Enable ${selectedHosts.size} selected host(s)?`
+                : `Disable ${selectedHosts.size} selected host(s)?`;
+            
+            if (!confirm(confirmMessage)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/hosts/bulk/enable`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ips: Array.from(selectedHosts),
+                        enabled: enabled
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`${result.message}`);
+                    clearSelection();
+                    await loadHosts();
+                    await loadStatus();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail || 'Failed to update hosts'}`);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function bulkDelete() {
+            if (selectedHosts.size === 0) {
+                alert('Please select hosts first');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete ${selectedHosts.size} selected host(s)? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/hosts/bulk/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ips: Array.from(selectedHosts)
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`${result.message}`);
+                    clearSelection();
+                    await loadHosts();
+                    await loadStatus();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail || 'Failed to delete hosts'}`);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function bulkMoveToGroup() {
+            if (selectedHosts.size === 0) {
+                alert('Please select hosts first');
+                return;
+            }
+            
+            const groupSelect = document.getElementById('bulk-group-select');
+            const groupId = groupSelect.value;
+            
+            if (!groupId) {
+                alert('Please select a group');
+                return;
+            }
+            
+            if (!confirm(`Move ${selectedHosts.size} selected host(s) to this group?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/hosts/bulk/group`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ips: Array.from(selectedHosts),
+                        group_id: parseInt(groupId)
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`${result.message}`);
+                    clearSelection();
+                    await loadHosts();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail || 'Failed to move hosts'}`);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function updateGroupsList() {
+            const groupsList = document.getElementById('groups-list');
+            if (!groupsList) return;
+            
+            groupsList.innerHTML = groups.map(group => `
+                <div class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg transition transform hover:scale-102 hover:shadow-md border border-slate-700">
+                    <div class="flex items-center space-x-3">
+                        <span style="font-size: 1.2rem;">${group.icon}</span>
+                        <div>
+                            <div class="font-medium text-gray-200">${group.name}</div>
+                            <div class="text-sm text-gray-400">${group.description || 'No description'}</div>
+                            <div class="text-xs text-gray-500 mt-1">${group.host_count} hosts</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="w-4 h-4 rounded-full" style="background-color: ${group.color};"></span>
+                        <button onclick="editGroupPrompt(${group.id})" class="text-blue-400 hover:text-blue-300 transition transform hover:scale-110" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteGroup(${group.id})" class="text-red-400 hover:text-red-300 transition transform hover:scale-110" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function addGroup() {
+            const name = document.getElementById('groupName').value.trim();
+            const color = document.getElementById('groupColorText').value;
+            const icon = document.getElementById('groupIcon').value;
+            const description = document.getElementById('groupDescription').value.trim();
+            
+            if (!name) {
+                alert('Please enter a group name');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/groups`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, color, icon, description })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('groupName').value = '';
+                    document.getElementById('groupDescription').value = '';
+                    await loadGroups();
+                    alert('Group added successfully!');
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Failed to add group');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteGroup(groupId) {
+            if (!confirm('Are you sure you want to delete this group? Hosts will be moved to "No Group".')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/groups/${groupId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    await loadGroups();
+                    await loadHosts();
+                } else {
+                    alert('Failed to delete group');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function editGroupPrompt(groupId) {
+            const group = groups.find(g => g.id === groupId);
+            if (!group) return;
+            
+            const newName = prompt('Enter new group name:', group.name);
+            if (newName && newName !== group.name) {
+                updateGroup(groupId, { name: newName });
+            }
+        }
+
+        async function updateGroup(groupId, updates) {
+            try {
+                const response = await fetch(`${API_BASE}/groups/${groupId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+                
+                if (response.ok) {
+                    await loadGroups();
+                } else {
+                    alert('Failed to update group');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function openAddModal() {
+            currentEditIP = null;
+            document.getElementById('modalTitle').textContent = 'Add New Host';
+            document.getElementById('hostName').value = '';
+            document.getElementById('hostIP').value = '';
+            document.getElementById('hostGroup').value = '';
+            document.getElementById('hostTags').value = '';
+            document.getElementById('hostEnabled').checked = true;
+            document.getElementById('hostModal').classList.remove('hidden');
+        }
+
+        async function editHost(ip) {
+            try {
+                const res = await fetch(`${API_BASE}/hosts`);
+                const hosts = await res.json();
+                const host = hosts.find(h => h.ip === ip);
+                
+                if (host) {
+                    currentEditIP = ip;
+                    document.getElementById('modalTitle').textContent = 'Edit Host';
+                    document.getElementById('hostName').value = host.name;
+                    document.getElementById('hostIP').value = host.ip;
+                    document.getElementById('hostGroup').value = host.group_id || '';
+                    document.getElementById('hostTags').value = host.tags?.join(', ') || '';
+                    document.getElementById('hostEnabled').checked = host.enabled;
+                    document.getElementById('hostModal').classList.remove('hidden');
+                }
+            } catch (err) {
+                alert('Error loading host: ' + err.message);
+            }
+        }
+
+async function saveHost() {
+            const name = document.getElementById('hostName').value.trim();
+            const ip = document.getElementById('hostIP').value.trim();
+            const groupId = document.getElementById('hostGroup').value || null;
+            const tags = document.getElementById('hostTags').value.split(',').map(t => t.trim()).filter(t => t);
+            const enabled = document.getElementById('hostEnabled').checked;
+            
+            if (!name || !ip) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Validate IP format
+            const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            if (!ipRegex.test(ip)) {
+                alert('Please enter a valid IP address');
+                return;
+            }
+            
+            try {
+                let response;
+                const hostData = { 
+                    name, 
+                    ip, 
+                    enabled, 
+                    tags, 
+                    group_id: groupId ? parseInt(groupId) : null 
+                };
+                
+                if (currentEditIP) {
+                    response = await fetch(`${API_BASE}/hosts/${currentEditIP}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(hostData)
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/hosts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(hostData)
+                    });
+                }
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    closeModal();
+                    showToast(result.message || 'Host saved successfully!', 'success');
+                    await loadHosts();
+                    await loadStatus();
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || 'Failed to save host', 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        async function deleteHost(ip) {
+            if (!confirm('Are you sure you want to delete this host?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/hosts/${ip}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast(result.message || 'Host deleted successfully!', 'success');
+                    await loadHosts();
+                    await loadStatus();
+                } else {
+                    const error = await response.json();
+                    showToast(error.detail || 'Failed to delete host', 'error');
+                }
+            } catch (err) {
+                showToast('Error: ' + err.message, 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('hostModal').classList.add('hidden');
+        }
+
+        function openGroupModal() {
+            document.getElementById('groupModal').classList.remove('hidden');
+        }
+
+        function closeGroupModal() {
+            document.getElementById('groupModal').classList.add('hidden');
+        }
+
+        function openSubnetModal() {
+            document.getElementById('subnetModal').classList.remove('hidden');
+            document.getElementById('subnetInput').focus();
+        }
+
+        function closeSubnetModal() {
+            document.getElementById('subnetModal').classList.add('hidden');
+            document.getElementById('subnetPreview').textContent = 'Enter a subnet to preview IPs...';
+        }
+
+        // Debounced subnet preview
+        let subnetPreviewTimeout;
+        document.addEventListener('DOMContentLoaded', function() {
+            const subnetInput = document.getElementById('subnetInput');
+            if (subnetInput) {
+                subnetInput.addEventListener('input', function() {
+                    clearTimeout(subnetPreviewTimeout);
+                    subnetPreviewTimeout = setTimeout(previewSubnet, 500);
+                });
+            }
+            
+            const colorPicker = document.getElementById('groupColor');
+            const colorText = document.getElementById('groupColorText');
+            
+            colorPicker.addEventListener('input', function() {
+                colorText.value = this.value;
+            });
+            
+            colorText.addEventListener('input', function() {
+                colorPicker.value = this.value;
+            });
+            
+            // Subnet color picker
+            const subnetColorPicker = document.getElementById('subnetGroupColor');
+            const subnetColorText = document.getElementById('subnetGroupColorText');
+            
+            subnetColorPicker.addEventListener('input', function() {
+                subnetColorText.value = this.value;
+            });
+            
+            subnetColorText.addEventListener('input', function() {
+                subnetColorPicker.value = this.value;
+            });
+        });
+
+        async function previewSubnet() {
+            const subnet = document.getElementById('subnetInput').value.trim();
+            if (!subnet || !subnet.includes('/')) {
+                document.getElementById('subnetPreview').textContent = 'Enter a valid subnet (e.g., 192.168.1.0/24)';
+                return;
+            }
+            
+            try {
+                document.getElementById('subnetPreview').textContent = 'Loading...';
+                const response = await fetch(`${API_BASE}/subnet/preview/${subnet}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let previewText = `Subnet: ${data.subnet}\n`;
+                    previewText += `Total IPs: ${data.total_ips}\n\n`;
+                    
+                    if (data.ips && data.ips.length > 0) {
+                        previewText += 'Sample IPs:\n';
+                        data.ips.slice(0, 5).forEach(ip => {
+                            previewText += `• ${ip}\n`;
+                        });
+                        
+                        if (data.total_ips > 5) {
+                            previewText += `... and ${data.total_ips - 5} more`;
+                        }
+                    }
+                    
+                    if (data.note) {
+                        previewText += `\n\n${data.note}`;
+                    }
+                    
+                    document.getElementById('subnetPreview').textContent = previewText;
+                } else {
+                    document.getElementById('subnetPreview').textContent = 'Invalid subnet format';
+                }
+            } catch (err) {
+                document.getElementById('subnetPreview').textContent = 'Error: ' + err.message;
+            }
+        }
+
+        async function startSubnetScan() {
+            const subnet = document.getElementById('subnetInput').value.trim();
+            const groupName = document.getElementById('subnetGroupName').value.trim();
+            const groupColor = document.getElementById('subnetGroupColorText').value;
+            const groupIcon = document.getElementById('subnetGroupIcon').value;
+            const scanMac = document.getElementById('scanMacAddress').checked;
+            
+            if (!subnet || !subnet.includes('/')) {
+                alert('Please enter a valid subnet in CIDR notation (e.g., 192.168.1.0/24)');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/subnet/scan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subnet,
+                        group_name: groupName || null,
+                        group_color: groupColor,
+                        group_icon: groupIcon,
+                        scan_mac: scanMac
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    closeSubnetModal();
+                    alert(`Subnet scan started!\n\nSubnet: ${data.subnet}\nGroup: ${data.group_name}\nTotal IPs to scan: ${data.total_ips}\n\nScanning will continue in the background.`);
+                    
+                    // Reload data after a delay to show progress
+                    setTimeout(() => {
+                        loadData();
+                    }, 5000);
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to start scan'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function openSettings() {
+            try {
+                const res = await fetch(`${API_BASE}/config`);
+                const config = await res.json();
+                
+                document.getElementById('configWebhook').value = config.webhook_url || '';
+                document.getElementById('configPingInterval').value = config.ping_interval || 5;
+                document.getElementById('configMaxRetries').value = config.max_retries || 3;
+                document.getElementById('configBatchInterval').value = config.batch_interval || 5;
+                document.getElementById('configConcurrent').value = config.concurrent_pings || 100;
+                
+                // Update webhook status display
+                if (config.webhook_url) {
+                    updateWebhookStatus(true, 'Webhook configured. Click "Save & Validate" to verify.');
+                } else {
+                    updateWebhookStatus(false, '');
+                }
+                
+                // Hide OTP section initially
+                document.getElementById('otpValidationSection').classList.add('hidden');
+                document.getElementById('otpError').classList.add('hidden');
+                
+                // Clear any existing timer
+                if (otpTimerInterval) {
+                    clearInterval(otpTimerInterval);
+                    otpTimerInterval = null;
+                }
+                
+                document.getElementById('settingsModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Error loading config: ' + err.message);
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            
+            const colors = {
+                success: 'bg-green-900/90 border border-green-700 text-green-100',
+                error: 'bg-red-900/90 border border-red-700 text-red-100',
+                info: 'bg-blue-900/90 border border-blue-700 text-blue-100',
+                warning: 'bg-yellow-900/90 border border-yellow-700 text-yellow-100'
+            };
+            
+            toast.className += ` ${colors[type] || colors.info}`;
+            toast.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        async function saveSettings() {
+            const config = {
+                discord_webhook_url: document.getElementById('configWebhook').value.trim(),
+                ping_interval: parseInt(document.getElementById('configPingInterval').value),
+                max_retries: parseInt(document.getElementById('configMaxRetries').value),
+                batch_interval: parseInt(document.getElementById('configBatchInterval').value),
+                concurrent_pings: parseInt(document.getElementById('configConcurrent').value)
+            };
+            
+            // If webhook is empty string, send empty string (not null)
+            if (config.discord_webhook_url === '') {
+                config.discord_webhook_url = '';
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (response.ok) {
+                    closeSettings();
+                    const result = await response.json();
+                    alert('Configuration saved! ' + (config.discord_webhook_url ? 
+                          'Webhook updated.' : 'Webhook cleared. Notifications disabled.'));
+                    
+                    // Reload page to reflect changes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    alert('Failed to save configuration: ' + (error.detail || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        async function toggleMonitoring() {
+            try {
+                const res = await fetch(`${API_BASE}/status`);
+                const data = await res.json();
+                
+                const endpoint = data.is_running ? `${API_BASE}/monitor/stop` : `${API_BASE}/monitor/start`;
+                const response = await fetch(endpoint, { method: 'POST' });
+                
+                if (response.ok) {
+                    setTimeout(loadStatus, 1000);
+                } else {
+                    alert('Failed to toggle monitoring');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        setInterval(() => {
+            if (!document.hidden) {
+                loadData();
+            }
+        }, 5000);
+
+        loadData();
+    </script>
+</body>
+</html>

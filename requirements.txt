@@ -1,0 +1,29 @@
+# requirements.txt
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+
+# Async HTTP Client
+aiohttp==3.9.1
+aiofiles==23.2.1
+
+# Data & Validation
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+
+# Process Management
+psutil==5.9.6
+
+# Utilities
+python-dotenv==1.0.0
+asyncio==3.4.3
+
+# Logging
+loguru==0.7.2
+
+# Network & System
+netifaces==0.11.0
+
+# OTP Generation (secrets is in Python standard library, no extra package needed)
