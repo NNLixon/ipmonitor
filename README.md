@@ -26,6 +26,7 @@ ls -la /usr/bin/ping
 
 # Make sure ipmonitor can use ping
 sudo setcap cap_net_raw+ep /bin/ping 2>/dev/null || true
+
 sudo setcap cap_net_raw+ep /usr/bin/ping 2>/dev/null || true
 
 
