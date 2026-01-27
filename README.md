@@ -250,17 +250,15 @@ ls -la /home/ipmonitor/ipmonitor/venv/
 4. Push to branch: `git push origin feature-name`
 5. Open a Pull Request
 
-## 📄 License
+# License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## ⭐ Support
+## Support
 
-If you find this project helpful, please give it a star! ⭐
+If you find this project helpful, please give it a star ⭐
 
----
-
-**Maintained by:** [NNLixon](https://github.com/NNLixon)  
+### Maintained by: NNLixon
 **Report Issues:** [GitHub Issues](https://github.com/NNLixon/ipmonitor/issues)
 
 <script>
@@ -270,15 +268,15 @@ async function copyToClipboard(text, button) {
     await navigator.clipboard.writeText(text);
     if (button) {
       const originalText = button.innerHTML;
-      button.innerHTML = '<span style="color: green;">✅ Copied!</span>';
+      button.innerHTML = '✅ Copied!';
       setTimeout(() => {
         button.innerHTML = originalText;
       }, 2000);
     }
   } catch (err) {
-    console.error('Failed to copy: ', err);
+    console.error("Failed to copy:", err);
     if (button) {
-      button.innerHTML = '<span style="color: red;">❌ Failed</span>';
+      button.innerHTML = '❌ Failed';
       setTimeout(() => {
         button.innerHTML = '📋 Copy';
       }, 2000);
@@ -289,7 +287,7 @@ async function copyToClipboard(text, button) {
 // Initialize copy buttons
 document.addEventListener('DOMContentLoaded', function() {
   // Find all code blocks with copy buttons
-  const codeBlocks = document.querySelectorAll('pre code');
+  const codeBlocks = document.querySelectorAll("pre code");
   
   codeBlocks.forEach((codeBlock, index) => {
     // Get the text content
@@ -299,9 +297,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const pre = codeBlock.parentElement;
     
     // Create copy button
-    const copyButton = document.createElement('button');
+    const copyButton = document.createElement("button");
     copyButton.className = 'copy-btn';
-    copyButton.innerHTML = '📋 Copy';
+    copyButton.innerHTML = "📋 Copy";
     copyButton.style.cssText = `
       position: absolute;
       top: 5px;
@@ -325,10 +323,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add click event
     copyButton.addEventListener('click', () => copyToClipboard(text, copyButton));
-  });
-});
-</script>
-    });
   });
 });
 </script>
