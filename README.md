@@ -77,6 +77,51 @@ sudo setcap cap_net_raw+ep /usr/bin/ping 2>/dev/null || true
 cd /home/ipmonitor && git clone https://github.com/NNLixon/ipmonitor.git
 ```
 
+## 
+## 📁 Directory Structure
+
+```
+ipmonitor/                            # Root project directory
+├── 📄 README.md                      # Main README documentation
+├── 📄 main.py                        # Main application entry point
+├── 📄 monitor.py                     # Standalone monitor script
+├── 📄 requirements.txt               # Python dependencies
+├── 📄 .env.example                   # Environment variables template
+├── 📄 pyproject.toml                 # Python project configuration
+│
+├── 📁 data/                          # Data storage directory
+│   ├── 📄 config.json                # Application configuration
+│   ├── 📄 hosts.json                 # Host definitions
+│   ├── 📄 states.json                # Host monitoring states
+│   ├── 📄 groups.json                # Host groups
+│   └── 📁 logs/                      # Log files
+│       └── 📄 monitor.log            # Application logs
+│
+├── 📁 app/                           # Application package
+    ├── 📄 __init__.py                # Package initialization
+    ├── 📄 config.py                  # Configuration management
+    ├── 📄 models.py                  # Pydantic data models
+    │
+    ├── 📁 monitor/                   # Core monitoring logic
+    │   ├── 📄 __init__.py
+    │   ├── 📄 ping_service.py        # Ping operations
+    │   ├── 📄 state_manager.py       # State persistence
+    │   └── 📄 notification_service.py # Discord notifications
+    │
+    ├── 📁 api/                       # Web API layer
+    │   ├── 📄 __init__.py
+    │   ├── 📄 routes.py              # REST API endpoints
+    │   └── 📄 websocket.py           # WebSocket handlers
+    │
+    ├── 📁 utils/                     # Utility modules
+    │   ├── 📄 __init__.py
+    │   └── 📄 network_scanner.py     # Subnet scanning
+    │
+    └── 📁 static/                    # Web dashboard files
+        ├── 📄 index.html             # Dashboard UI
+        └── 📄 icon.ico               # Favicon
+```
+
 ```bash
 cd ipmonitor && cp env.example .env
 ```
@@ -201,51 +246,59 @@ ls -la /home/ipmonitor/ipmonitor/venv/
 # Check requirements installation
 /home/ipmonitor/ipmonitor/venv/bin/python -c "import flask; print('Flask version:', flask.__version__)"
 ```
+## 🔧 Log Rotation service Setup
 
-## 📁 Directory Structure
-
+```bash
+sudo nano /etc/logrotate.d/ipmonitor
 ```
-ipmonitor/                            # Root project directory
-├── 📄 README.md                      # Main README documentation
-├── 📄 main.py                        # Main application entry point
-├── 📄 monitor.py                     # Standalone monitor script
-├── 📄 requirements.txt               # Python dependencies
-├── 📄 .env.example                   # Environment variables template
-├── 📄 pyproject.toml                 # Python project configuration
-│
-├── 📁 data/                          # Data storage directory
-│   ├── 📄 config.json                # Application configuration
-│   ├── 📄 hosts.json                 # Host definitions
-│   ├── 📄 states.json                # Host monitoring states
-│   ├── 📄 groups.json                # Host groups
-│   └── 📁 logs/                      # Log files
-│       └── 📄 monitor.log            # Application logs
-│
-├── 📁 app/                           # Application package
-    ├── 📄 __init__.py                # Package initialization
-    ├── 📄 config.py                  # Configuration management
-    ├── 📄 models.py                  # Pydantic data models
-    │
-    ├── 📁 monitor/                   # Core monitoring logic
-    │   ├── 📄 __init__.py
-    │   ├── 📄 ping_service.py        # Ping operations
-    │   ├── 📄 state_manager.py       # State persistence
-    │   └── 📄 notification_service.py # Discord notifications
-    │
-    ├── 📁 api/                       # Web API layer
-    │   ├── 📄 __init__.py
-    │   ├── 📄 routes.py              # REST API endpoints
-    │   └── 📄 websocket.py           # WebSocket handlers
-    │
-    ├── 📁 utils/                     # Utility modules
-    │   ├── 📄 __init__.py
-    │   └── 📄 network_scanner.py     # Subnet scanning
-    │
-    └── 📁 static/                    # Web dashboard files
-        ├── 📄 index.html             # Dashboard UI
-        └── 📄 icon.ico               # Favicon
-```
+Copy and paste the following content:
 
+```bash
+/home/ipmonitor/ipmonitor/data/logs/monitor.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 640 ipmonitor ipmonitor
+    sharedscripts
+    copytruncate
+    dateext
+    dateformat .%Y-%m-%d
+    
+    # Add these lines to fix permission issue
+    su ipmonitor ipmonitor
+    
+    postrotate
+        pkill -USR1 -f "python.*main.py" 2>/dev/null || true
+    endscript
+}
+```
+Check current log file
+```bash
+ls -la /home/ipmonitor/ipmonitor/data/logs/
+```
+Check log file permissions
+```bash
+stat /home/ipmonitor/ipmonitor/data/logs/monitor.log
+```
+View current log
+```bash
+tail -f /home/ipmonitor/ipmonitor/data/logs/monitor.log
+```
+Test with debug mode first
+```bash
+sudo logrotate -d /etc/logrotate.d/ipmonitor
+```
+Then force a rotation
+```bash
+sudo logrotate -vf /etc/logrotate.d/ipmonitor
+```
+Check if rotation worked
+```bash
+ls -la /home/ipmonitor/ipmonitor/data/logs/
+```
 ## 🔒 Security Notes
 
 - ✅ **Dedicated user** (`ipmonitor`) for service isolation
