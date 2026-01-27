@@ -264,34 +264,70 @@ If you find this project helpful, please give it a star! ⭐
 **Report Issues:** [GitHub Issues](https://github.com/NNLixon/ipmonitor/issues)
 
 <script>
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    // Optional: Show a small notification
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(btn => {
-      if (btn.textContent.includes('📋')) {
-        btn.addEventListener('click', function() {
-          const originalText = this.textContent;
-          this.textContent = '✅ Copied!';
-          setTimeout(() => {
-            this.textContent = originalText;
-          }, 2000);
-        });
-      }
-    });
-  });
+// Enhanced copy function with better feedback
+async function copyToClipboard(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+    if (button) {
+      const originalText = button.innerHTML;
+      button.innerHTML = '<span style="color: green;">✅ Copied!</span>';
+      setTimeout(() => {
+        button.innerHTML = originalText;
+      }, 2000);
+    }
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+    if (button) {
+      button.innerHTML = '<span style="color: red;">❌ Failed</span>';
+      setTimeout(() => {
+        button.innerHTML = '📋 Copy';
+      }, 2000);
+    }
+  }
 }
 
-// Add event listeners to all copy buttons
+// Initialize copy buttons
 document.addEventListener('DOMContentLoaded', function() {
-  const buttons = document.querySelectorAll('button');
-  buttons.forEach(button => {
-    button.addEventListener('click', function() {
-      const originalText = this.textContent;
-      this.textContent = '✅ Copied!';
-      setTimeout(() => {
-        this.textContent = originalText;
-      }, 2000);
+  // Find all code blocks with copy buttons
+  const codeBlocks = document.querySelectorAll('pre code');
+  
+  codeBlocks.forEach((codeBlock, index) => {
+    // Get the text content
+    const text = codeBlock.textContent;
+    
+    // Find the parent pre element
+    const pre = codeBlock.parentElement;
+    
+    // Create copy button
+    const copyButton = document.createElement('button');
+    copyButton.className = 'copy-btn';
+    copyButton.innerHTML = '📋 Copy';
+    copyButton.style.cssText = `
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #2d333b;
+      color: white;
+      border: 1px solid #444c56;
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 10;
+    `;
+    
+    // Style the pre element for positioning
+    pre.style.position = 'relative';
+    pre.style.paddingTop = '30px';
+    
+    // Add button to pre element
+    pre.appendChild(copyButton);
+    
+    // Add click event
+    copyButton.addEventListener('click', () => copyToClipboard(text, copyButton));
+  });
+});
+</script>
     });
   });
 });
