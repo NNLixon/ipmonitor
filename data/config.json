@@ -1,5 +1,5 @@
 {
-  "discord_webhook_url": "https://discord.com/api/webhooks/1464851319809638462/zhT0Q_KnI49tWpZLfx3M4djPLcvgfk9HmGfUt-Qk-Iryk782IOSG8lNuZNe7XnN_FZye",
+  "discord_webhook_url": "",
   "ping_interval": 10,
   "max_retries": 5,
   "ping_timeout": 2,
