@@ -30,78 +30,72 @@
 ## 🚀 Quick Installation
 
 ### Step 1: Update System & Install Dependencies
+
 ```bash
 sudo apt update && sudo apt upgrade -y
 ```
-<button onclick="navigator.clipboard.writeText('sudo apt update && sudo apt upgrade -y')">📋 Copy</button>
 
 ```bash
 sudo apt install -y nmap python3 python3-pip python3-venv git curl wget build-essential
 ```
-<button onclick="navigator.clipboard.writeText('sudo apt install -y nmap python3 python3-pip python3-venv git curl wget build-essential')">📋 Copy</button>
 
 ### Step 2: Create Dedicated User
+
 ```bash
 sudo useradd -m -s /bin/bash ipmonitor
 ```
-<button onclick="navigator.clipboard.writeText('sudo useradd -m -s /bin/bash ipmonitor')">📋 Copy</button>
 
 ```bash
 sudo usermod -aG sudo ipmonitor
 ```
-<button onclick="navigator.clipboard.writeText('sudo usermod -aG sudo ipmonitor')">📋 Copy</button>
 
 ```bash
 sudo passwd ipmonitor
 ```
-<button onclick="navigator.clipboard.writeText('sudo passwd ipmonitor')">📋 Copy</button>
-*Set a secure password when prompted*
+
+> **Note:** Set a secure password when prompted
 
 ### Step 3: Switch to ipmonitor User
+
 ```bash
 sudo -u ipmonitor -i
 ```
-<button onclick="navigator.clipboard.writeText('sudo -u ipmonitor -i')">📋 Copy</button>
 
 ### Step 4: Configure Ping Permissions
+
 ```bash
 sudo setcap cap_net_raw+ep /bin/ping 2>/dev/null || true
 ```
-<button onclick="navigator.clipboard.writeText('sudo setcap cap_net_raw+ep /bin/ping 2>/dev/null || true')">📋 Copy</button>
 
 ```bash
 sudo setcap cap_net_raw+ep /usr/bin/ping 2>/dev/null || true
 ```
-<button onclick="navigator.clipboard.writeText('sudo setcap cap_net_raw+ep /usr/bin/ping 2>/dev/null || true')">📋 Copy</button>
 
 ### Step 5: Clone Repository & Setup
+
 ```bash
 cd /home/ipmonitor && git clone https://github.com/NNLixon/ipmonitor.git
 ```
-<button onclick="navigator.clipboard.writeText('cd /home/ipmonitor && git clone https://github.com/NNLixon/ipmonitor.git')">📋 Copy</button>
 
 ```bash
 cd ipmonitor && python3 -m venv venv
 ```
-<button onclick="navigator.clipboard.writeText('cd ipmonitor && python3 -m venv venv')">📋 Copy</button>
 
 ```bash
 source venv/bin/activate
 ```
-<button onclick="navigator.clipboard.writeText('source venv/bin/activate')">📋 Copy</button>
 
 ```bash
 pip3 install --upgrade pip && pip3 install -r requirements.txt
 ```
-<button onclick="navigator.clipboard.writeText('pip3 install --upgrade pip && pip3 install -r requirements.txt')">📋 Copy</button>
 
 ## 🔧 Systemd Service Setup
 
 ### Create Service File
+
 ```bash
 sudo nano /etc/systemd/system/ipmonitor.service
 ```
-<button onclick="navigator.clipboard.writeText('sudo nano /etc/systemd/system/ipmonitor.service')">📋 Copy</button>
 
 Copy and paste the following content:
 
@@ -142,78 +136,74 @@ WantedBy=multi-user.target
 ```
 
 ### Enable & Start Service
+
 ```bash
 sudo systemctl daemon-reload
 ```
-<button onclick="navigator.clipboard.writeText('sudo systemctl daemon-reload')">📋 Copy</button>
 
 ```bash
 sudo systemctl enable ipmonitor.service
 ```
-<button onclick="navigator.clipboard.writeText('sudo systemctl enable ipmonitor.service')">📋 Copy</button>
 
 ```bash
 sudo systemctl start ipmonitor.service
 ```
-<button onclick="navigator.clipboard.writeText('sudo systemctl start ipmonitor.service')">📋 Copy</button>
 
 ## 📈 Service Management Commands
 
-| Action | Command | Copy |
-|--------|---------|------|
-| Check Status | `sudo systemctl status ipmonitor.service` | <button onclick="navigator.clipboard.writeText('sudo systemctl status ipmonitor.service')">📋</button> |
-| View Logs | `sudo journalctl -u ipmonitor.service -f` | <button onclick="navigator.clipboard.writeText('sudo journalctl -u ipmonitor.service -f')">📋</button> |
-| Restart Service | `sudo systemctl restart ipmonitor.service` | <button onclick="navigator.clipboard.writeText('sudo systemctl restart ipmonitor.service')">📋</button> |
-| Stop Service | `sudo systemctl stop ipmonitor.service` | <button onclick="navigator.clipboard.writeText('sudo systemctl stop ipmonitor.service')">📋</button> |
-| Reload Service | `sudo systemctl reload ipmonitor.service` | <button onclick="navigator.clipboard.writeText('sudo systemctl reload ipmonitor.service')">📋</button> |
+| Action | Command |
+|--------|---------|
+| **Check Status** | `sudo systemctl status ipmonitor.service` |
+| **View Logs** | `sudo journalctl -u ipmonitor.service -f` |
+| **Restart Service** | `sudo systemctl restart ipmonitor.service` |
+| **Stop Service** | `sudo systemctl stop ipmonitor.service` |
+| **Reload Service** | `sudo systemctl reload ipmonitor.service` |
 
 ## 🌐 Access the Dashboard
 
 Once running, access the dashboard at:
 
-**URL:** [http://your-server-ip:8000](http://localhost:8000)
+**URL:** http://your-server-ip:8000
 
 Test accessibility:
+
 ```bash
 curl -I http://localhost:8000
 ```
-<button onclick="navigator.clipboard.writeText('curl -I http://localhost:8000')">📋 Copy</button>
 
 ## 🔍 Monitoring & Troubleshooting
 
 ### Check System Resources
+
 ```bash
 # Disk space
 df -h /home/ipmonitor
 ```
-<button onclick="navigator.clipboard.writeText('df -h /home/ipmonitor')">📋 Copy</button>
 
 ```bash
 # Memory usage
 free -h
 ```
-<button onclick="navigator.clipboard.writeText('free -h')">📋 Copy</button>
 
 ```bash
 # Process status
 ps aux | grep ipmonitor
 ```
-<button onclick="navigator.clipboard.writeText('ps aux | grep ipmonitor')">📋 Copy</button>
 
 ### Verify Service Components
+
 ```bash
 # Check if virtual environment exists
 ls -la /home/ipmonitor/ipmonitor/venv/
 ```
-<button onclick="navigator.clipboard.writeText('ls -la /home/ipmonitor/ipmonitor/venv/')">📋 Copy</button>
 
 ```bash
 # Check requirements installation
 /home/ipmonitor/ipmonitor/venv/bin/python -c "import flask; print('Flask version:', flask.__version__)"
 ```
-<button onclick="navigator.clipboard.writeText('/home/ipmonitor/ipmonitor/venv/bin/python -c \"import flask; print(\'Flask version:\', flask.__version__)\"')">📋 Copy</button>
 
 ## 📁 Directory Structure
+
 ```
 /home/ipmonitor/
 └── ipmonitor/
@@ -224,7 +214,7 @@ ls -la /home/ipmonitor/ipmonitor/venv/
     └── README.md                # This file
 ```
 
-## 🔐 Security Notes
+## 🔒 Security Notes
 
 - ✅ **Dedicated user** (`ipmonitor`) for service isolation
 - ✅ **Limited capabilities** (only `CAP_NET_RAW` for ping)
@@ -250,44 +240,13 @@ ls -la /home/ipmonitor/ipmonitor/venv/
 4. Push to branch: `git push origin feature-name`
 5. Open a Pull Request
 
-# License
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Support
+## 💬 Support
 
 If you find this project helpful, please give it a star ⭐
 
-### Maintained by: NNLixon
+**Maintained by:** NNLixon  
 **Report Issues:** [GitHub Issues](https://github.com/NNLixon/ipmonitor/issues)
-
-<script>
-// Simple copy function
-function setupCopyButtons() {
-  const buttons = document.querySelectorAll('button.copy-btn');
-  
-  buttons.forEach(button => {
-    button.addEventListener('click', function() {
-      const textToCopy = this.getAttribute('data-copy');
-      if (!textToCopy) return;
-      
-      navigator.clipboard.writeText(textToCopy)
-        .then(() => {
-          const original = this.innerHTML;
-          this.innerHTML = '✅ Copied!';
-          setTimeout(() => this.innerHTML = original, 2000);
-        })
-        .catch(err => {
-          console.error('Copy failed:', err);
-          const original = this.innerHTML;
-          this.innerHTML = '❌ Failed';
-          setTimeout(() => this.innerHTML = original, 2000);
-        });
-    });
-  });
-}
-
-// Run when page loads
-document.addEventListener('DOMContentLoaded', setupCopyButtons);
-</script>
-```
