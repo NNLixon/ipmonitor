@@ -78,11 +78,11 @@ cd /home/ipmonitor && git clone https://github.com/NNLixon/ipmonitor.git
 ```
 
 ```bash
-cd ipmonitor && python3 -m venv venv
+cd ipmonitor && cp env.example .env
 ```
 
 ```bash
-source venv/bin/activate
+python3 -m venv venv && source venv/bin/activate
 ```
 
 ```bash
@@ -205,13 +205,45 @@ ls -la /home/ipmonitor/ipmonitor/venv/
 ## 📁 Directory Structure
 
 ```
-/home/ipmonitor/
-└── ipmonitor/
-    ├── venv/                    # Python virtual environment
-    ├── data/                    # Application data and logs
-    ├── main.py                  # Main application file
-    ├── requirements.txt         # Python dependencies
-    └── README.md                # This file
+ipmonitor/                            # Root project directory
+├── 📄 README.md                      # Main README documentation
+├── 📄 main.py                        # Main application entry point
+├── 📄 monitor.py                     # Standalone monitor script
+├── 📄 requirements.txt               # Python dependencies
+├── 📄 .env.example                   # Environment variables template
+├── 📄 pyproject.toml                 # Python project configuration
+│
+├── 📁 data/                          # Data storage directory
+│   ├── 📄 config.json                # Application configuration
+│   ├── 📄 hosts.json                 # Host definitions
+│   ├── 📄 states.json                # Host monitoring states
+│   ├── 📄 groups.json                # Host groups
+│   └── 📁 logs/                      # Log files
+│       └── 📄 monitor.log            # Application logs
+│
+├── 📁 app/                           # Application package
+    ├── 📄 __init__.py                # Package initialization
+    ├── 📄 config.py                  # Configuration management
+    ├── 📄 models.py                  # Pydantic data models
+    │
+    ├── 📁 monitor/                   # Core monitoring logic
+    │   ├── 📄 __init__.py
+    │   ├── 📄 ping_service.py        # Ping operations
+    │   ├── 📄 state_manager.py       # State persistence
+    │   └── 📄 notification_service.py # Discord notifications
+    │
+    ├── 📁 api/                       # Web API layer
+    │   ├── 📄 __init__.py
+    │   ├── 📄 routes.py              # REST API endpoints
+    │   └── 📄 websocket.py           # WebSocket handlers
+    │
+    ├── 📁 utils/                     # Utility modules
+    │   ├── 📄 __init__.py
+    │   └── 📄 network_scanner.py     # Subnet scanning
+    │
+    └── 📁 static/                    # Web dashboard files
+        ├── 📄 index.html             # Dashboard UI
+        └── 📄 icon.ico               # Favicon
 ```
 
 ## 🔒 Security Notes
