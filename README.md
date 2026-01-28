@@ -550,6 +550,9 @@ stat /home/ipmonitor/ipmonitor/data/logs/monitor.log
    - Configure SSL/TLS certificates
    - Use Let's Encrypt for free certificates
 
+6. **Cloudflare free Tunnel for HTTPS** (If someone does not own a custom domain)
+   - Anyone can Use this clouflare free tunnel configuration for HTTPS
+   - https://github.com/NNLixon/cloudflare-tunnel-free
 ---
 
 ## 🆘 Common Issues & Solutions
@@ -687,7 +690,6 @@ sudo logrotate -f /etc/logrotate.d/ipmonitor
 3. Enter device details:
    - **Name:** Friendly device name (e.g., "Main Router")
    - **IP Address:** Device IP (e.g., "192.168.1.1")
-   - **Interval:** Ping frequency in seconds (default: 60)
    - **Group:** Optional group name for organization
 
 ### Organizing Devices with Groups
@@ -752,36 +754,6 @@ curl -X DELETE http://localhost:8000/api/hosts/192.168.1.100
 
 ---
 
-## 🚀 Advanced Configuration
-
-### Custom Ping Intervals
-
-Set different ping frequencies for different devices:
-
-- **Critical devices:** 30 seconds (fast detection)
-- **Standard devices:** 60 seconds (balanced)
-- **Low-priority devices:** 300 seconds (reduced overhead)
-
-### Performance Tuning
-
-For monitoring 100+ devices:
-
-```bash
-# Edit .env file
-nano /home/ipmonitor/ipmonitor/.env
-```
-
-```
-# Increase worker threads
-WORKERS=4
-
-# Adjust concurrent ping limit
-MAX_CONCURRENT_PINGS=50
-
-# Set timeout values
-PING_TIMEOUT=3
-```
-
 ### Database Backup
 
 Backup your monitoring data:
@@ -822,7 +794,7 @@ I welcome contributions from the community! Here's how you can help:
 
 ```bash
 # Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/ipmonitor.git
+git clone https://github.com/NNLixon/ipmonitor.git
 cd ipmonitor
 
 # Create development branch
@@ -832,7 +804,6 @@ git checkout -b feature/your-feature-name
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install -r requirements-dev.txt  # If available
 
 # Make your changes and test
 python main.py
